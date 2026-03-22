@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "CommentX Agent",
+  "version": "1.0.0",
+  "description": "自动在微博、小红书、抖音进行评论和翻页的智能Agent",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://*.weibo.com/*",
+    "*://*.xiaohongshu.com/*",
+    "*://*.douyin.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.weibo.com/*"],
+      "js": ["content/weibo.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "icons.svg"
+  }
+}

@@ -1,0 +1,62 @@
+:root {
+  --text: #475569;
+  --text-h: #0f172a;
+  --text-soft: #64748b;
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --panel-soft: #f8fafc;
+  --border: #dbe3ee;
+  --accent: #7c3aed;
+  --shadow:
+    rgba(15, 23, 42, 0.08) 0 6px 20px -10px, rgba(15, 23, 42, 0.06) 0 2px 8px -2px;
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+}
+
+#root {
+  width: 1280px;
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: left;
+  min-height: 100svh;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #eef2ff 0%, #f8fafc 35%);
+}
+
+h1,
+h2 {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+h1 {
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0;
+}
