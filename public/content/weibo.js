@@ -251,8 +251,9 @@ async function processSinglePost(post, commentBtn) {
             for (let i = 0; i < 25; i++) {
                 await sleep(200);
                 
-                // 尝试多种可能的输入框选择器
-                textarea = post.querySelector('textarea.Form_input_2gtHj, textarea.Form_input_30A14, textarea[placeholder*="评论"], textarea');
+                // 尝试多种可能的输入框选择器，优先找可见的
+                const textareas = Array.from(post.querySelectorAll('textarea.Form_input_2gtHj, textarea.Form_input_30A14, textarea[placeholder*="评论"], textarea'));
+                textarea = textareas.find(t => t.offsetParent !== null);
                 
                 // 如果在当前帖子里没找到，尝试在整个文档的活跃元素中找（有些弹窗是挂载在body上的）
                 if (!textarea) {
@@ -293,13 +294,16 @@ async function processSinglePost(post, commentBtn) {
             textarea.value = template;
         }
         
-        // 连续触发多个事件，确保前端框架捕获到内容变化，激活“发送”按钮
-        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        // 触发更加真实的输入事件，确保前端框架捕获到内容变化，激活“发送”按钮
+        textarea.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: template }));
         textarea.dispatchEvent(new Event('change', { bubbles: true }));
-        textarea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'Enter', keyCode: 13 }));
+        
+        // 这里去掉了之前可能导致意外提前提交的 Enter 键触发
         
         if (!config.requireManualConfirm) {
-            await sleep(1000);
+            // 给用户留出视觉停留时间，能看到填入了什么
+            await sleep(1500);
+            
             // 查找发送按钮 (在 textarea 附近寻找)
             const parent = textarea.closest('.woo-box-flex') || textarea.parentElement.parentElement || post;
             
