@@ -144,17 +144,20 @@ function stopAgent() {
 // 模拟真实的鼠标点击（绕过 Vue/React 拦截）
 function simulateClick(el) {
     if (!el) return;
-    
-    // 只保留构建完整的鼠标事件链，避免原生 click 导致双击关闭评论区
-    ['mouseover', 'mousedown', 'mouseup', 'click'].forEach(ev => {
-        const event = new MouseEvent(ev, {
+    try {
+        // 原生 click 是最可靠的，它会自动冒泡并被 Vue/React 捕获
+        // 之前产生双击是因为我们同时用了原生 click 和 dispatchEvent
+        el.click();
+    } catch (e) {
+        // 备用方案
+        const event = new MouseEvent('click', {
             view: window,
             bubbles: true,
             cancelable: true,
             buttons: 1
         });
         el.dispatchEvent(event);
-    });
+    }
 }
 
 function findNewPosts() {
@@ -224,30 +227,48 @@ async function processSinglePost(post, commentBtn) {
         commentBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
         await sleep(800);
         
-        // 点击展开评论
-        simulateClick(commentBtn);
+        // 先检查评论区是否已经展开了（寻找 textarea）
+        let textarea = post.querySelector('textarea.Form_input_2gtHj, textarea.Form_input_30A14, textarea[placeholder*="评论"], textarea');
         
-        // 等待输入框渲染（动态轮询等待，最多等待5秒）
-        log('等待输入框渲染...');
-        let textarea = null;
-        for (let i = 0; i < 25; i++) {
-            await sleep(200);
+        if (!textarea || textarea.offsetParent === null) {
+            // 点击展开评论
+            simulateClick(commentBtn);
             
-            // 尝试多种可能的输入框选择器
-            textarea = post.querySelector('textarea.Form_input_2gtHj, textarea.Form_input_30A14, textarea[placeholder*="评论"], textarea');
-            
-            // 如果在当前帖子里没找到，尝试在整个文档的活跃元素中找（有些弹窗是挂载在body上的）
-            if (!textarea) {
-                const activeEl = document.activeElement;
-                if (activeEl && activeEl.tagName === 'TEXTAREA') {
-                    textarea = activeEl;
+            // 如果点击外层没反应，尝试点击内层具体元素
+            setTimeout(() => {
+                const currentTextarea = post.querySelector('textarea');
+                if (!currentTextarea || currentTextarea.offsetParent === null) {
+                    const inner = commentBtn.querySelector('i, span') || commentBtn;
+                    if (inner !== commentBtn) {
+                        try { inner.click(); } catch(e){}
+                    }
                 }
-            }
+            }, 800);
             
-            if (textarea && textarea.offsetParent !== null) { // 确保是可见的
-                break;
-            }
+            // 等待输入框渲染（动态轮询等待，最多等待5秒）
+            log('等待输入框渲染...');
             textarea = null;
+            for (let i = 0; i < 25; i++) {
+                await sleep(200);
+                
+                // 尝试多种可能的输入框选择器
+                textarea = post.querySelector('textarea.Form_input_2gtHj, textarea.Form_input_30A14, textarea[placeholder*="评论"], textarea');
+                
+                // 如果在当前帖子里没找到，尝试在整个文档的活跃元素中找（有些弹窗是挂载在body上的）
+                if (!textarea) {
+                    const activeEl = document.activeElement;
+                    if (activeEl && activeEl.tagName === 'TEXTAREA') {
+                        textarea = activeEl;
+                    }
+                }
+                
+                if (textarea && textarea.offsetParent !== null) { // 确保是可见的
+                    break;
+                }
+                textarea = null;
+            }
+        } else {
+            log('评论区已处于展开状态');
         }
         
         if (!textarea) {
